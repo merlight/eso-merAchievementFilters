@@ -1,2 +1,4 @@
 ZO_CreateStringId("merSI_ACHIEVEMENT_FILTER_SHOW_UNDERWAY", "Show Started")
-
+ZO_CreateStringId("merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_DYE", "Show w/ Dye")
+ZO_CreateStringId("merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_ITEM", "Show w/ Item")
+ZO_CreateStringId("merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_TITLE", "Show w/ Title")

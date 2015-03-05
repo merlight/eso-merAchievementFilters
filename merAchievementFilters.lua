@@ -29,78 +29,56 @@ local function isAchievementPartiallyCompleted(id)
 end
 
 
-local function orgMethodInvoker(obj, name)
-    local original = rawget(obj, name)
-    if original then
-        return original
-    end
-    local function super(self, ...)
-        local index = getmetatable(self).__index
-        return index[name](self, ...)
-    end
-    return super
-end
-
-
-local function sift(sieve, ...)
-    if select("#", ...) > 0 then
-        local grain = select(1, ...)
-        if sieve(grain) then
-            return grain, sift(sieve, select(2, ...))
-        else
-            return sift(sieve, select(2, ...))
-        end
-    end
-end
-
-
 local function onAddOnLoaded(eventCode, addOnName)
     if addOnName ~= myNAME then return end
     EVENT_MANAGER:UnregisterForEvent(myNAME, EVENT_ADD_ON_LOADED)
 
-    local function filterChanged(comboBox, entryText, entry)
-        ACHIEVEMENTS.categoryFilter.filterType = entry.filterType
-        ACHIEVEMENTS.categoryFilter.merFilterName = entry.name
-        ACHIEVEMENTS.categoryFilter.merCustomFilter = entry.merCustomFilter
-        ACHIEVEMENTS:RefreshVisibleCategoryFilter()
-    end
-
     local comboBox = ZO_ComboBox_ObjectFromContainer(ACHIEVEMENTS.categoryFilter)
-    local underwayEntryIndex = nil
+    local comboItems = comboBox:GetItems()
+    local filterCallback = (comboItems[1] and comboItems[1].callback)
+    if not filterCallback then return end
 
-    for index, entry in ipairs(comboBox:GetItems()) do
-        if entry.filterType == SI_ACHIEVEMENT_FILTER_SHOW_UNEARNED then
-            -- remember index for insertion of UNDERWAY before UNEARNED
-            underwayEntryIndex = index
-        end
-        -- replace callback with one also updating custom filter
-        entry.callback = filterChanged
-    end
+    -- Hook ZO_ShouldShowAchievement before adding any filters. This is
+    -- a minor safety measure, because given an unrecognized filterType,
+    -- it would bounce indefinitely on partially completed achievements.
+    local zorgShouldShowAchievement = ZO_ShouldShowAchievement
 
-    if underwayEntryIndex then
-        local underwayEntry =
-        {
-            name = GetString(merSI_ACHIEVEMENT_FILTER_SHOW_UNDERWAY),
-            filterType = SI_ACHIEVEMENT_FILTER_SHOW_ALL, -- bypass ShouldAddAchievement
-            callback = filterChanged,
-            merCustomFilter = isAchievementPartiallyCompleted,
-        }
-        table.insert(comboBox:GetItems(), underwayEntryIndex, underwayEntry)
-        comboBox:UpdateItems()
-    end
-
-    local zorgLayoutAchievements = orgMethodInvoker(ACHIEVEMENTS, "LayoutAchievements")
-
-    function ACHIEVEMENTS:LayoutAchievements(...)
-        if self.categoryFilter.merCustomFilter then
-            df("|c7fff7f<<1>>: <<2>>", self.categoryLabel:GetText(), self.categoryFilter.merFilterName)
-            return zorgLayoutAchievements(self, sift(self.categoryFilter.merCustomFilter, ...))
+    function ZO_ShouldShowAchievement(filterType, id)
+        if filterType == merSI_ACHIEVEMENT_FILTER_SHOW_UNDERWAY then
+            return isAchievementPartiallyCompleted(id)
+        elseif filterType == merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_TITLE then
+            return (GetAchievementRewardTitle(id))
+        elseif filterType == merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_DYE then
+            return (GetAchievementRewardDye(id))
+        elseif filterType == merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_ITEM then
+            return (GetAchievementRewardItem(id))
         else
-            return zorgLayoutAchievements(self, ...)
+            return zorgShouldShowAchievement(filterType, id)
         end
     end
+
+    local function insertFilter(index, stringId)
+        local name = GetString(stringId)
+        local entry = comboBox:CreateItemEntry(name, filterCallback)
+        entry.filterType = stringId
+        table.insert(comboItems, index, entry)
+    end
+
+    for index, entry in ipairs(comboItems) do
+        if entry.filterType == SI_ACHIEVEMENT_FILTER_SHOW_UNEARNED then
+            -- insert UNDERWAY before UNEARNED
+            insertFilter(index, merSI_ACHIEVEMENT_FILTER_SHOW_UNDERWAY)
+            break -- out! or this loop would never end
+        end
+    end
+
+    -- append additional filters in the order the reward types were introduced
+    insertFilter(#comboItems + 1, merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_TITLE)
+    insertFilter(#comboItems + 1, merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_DYE)
+    insertFilter(#comboItems + 1, merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_ITEM)
+
+    comboBox:UpdateItems()
 end
 
 
 EVENT_MANAGER:RegisterForEvent(myNAME, EVENT_ADD_ON_LOADED, onAddOnLoaded)
-
