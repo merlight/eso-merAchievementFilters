@@ -1,4 +1,9 @@
-ZO_CreateStringId("merSI_ACHIEVEMENT_FILTER_SHOW_UNDERWAY", "Show Started")
-ZO_CreateStringId("merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_DYE", "Show w/ Dye")
-ZO_CreateStringId("merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_ITEM", "Show w/ Item")
-ZO_CreateStringId("merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_TITLE", "Show w/ Title")
+local function CreateString(stringId, stringValue, stringVersion)
+    ZO_CreateStringId(stringId, stringValue)
+    SafeAddVersion(_G[stringId], stringVersion)
+end
+
+CreateString("SI_MER_ACHIEVEMENT_FILTER_SHOW_STARTED", "Show Started", 1)
+CreateString("SI_MER_ACHIEVEMENT_FILTER_WITH_DYE", "With Dye", 1)
+CreateString("SI_MER_ACHIEVEMENT_FILTER_WITH_ITEM", "With Item", 1)
+CreateString("SI_MER_ACHIEVEMENT_FILTER_WITH_TITLE", "With Title", 1)

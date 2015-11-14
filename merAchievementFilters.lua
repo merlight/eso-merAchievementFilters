@@ -44,13 +44,13 @@ local function onAddOnLoaded(eventCode, addOnName)
     local zorgShouldShowAchievement = ZO_ShouldShowAchievement
 
     function ZO_ShouldShowAchievement(filterType, id)
-        if filterType == merSI_ACHIEVEMENT_FILTER_SHOW_UNDERWAY then
+        if filterType == SI_MER_ACHIEVEMENT_FILTER_SHOW_STARTED then
             return isAchievementPartiallyCompleted(id)
-        elseif filterType == merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_TITLE then
+        elseif filterType == SI_MER_ACHIEVEMENT_FILTER_WITH_TITLE then
             return (GetAchievementRewardTitle(id))
-        elseif filterType == merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_DYE then
+        elseif filterType == SI_MER_ACHIEVEMENT_FILTER_WITH_DYE then
             return (GetAchievementRewardDye(id))
-        elseif filterType == merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_ITEM then
+        elseif filterType == SI_MER_ACHIEVEMENT_FILTER_WITH_ITEM then
             return (GetAchievementRewardItem(id))
         else
             return zorgShouldShowAchievement(filterType, id)
@@ -66,16 +66,16 @@ local function onAddOnLoaded(eventCode, addOnName)
 
     for index, entry in ipairs(comboItems) do
         if entry.filterType == SI_ACHIEVEMENT_FILTER_SHOW_UNEARNED then
-            -- insert UNDERWAY before UNEARNED
-            insertFilter(index, merSI_ACHIEVEMENT_FILTER_SHOW_UNDERWAY)
+            -- insert STARTED before UNEARNED
+            insertFilter(index, SI_MER_ACHIEVEMENT_FILTER_SHOW_STARTED)
             break -- out! or this loop would never end
         end
     end
 
     -- append additional filters in the order the reward types were introduced
-    insertFilter(#comboItems + 1, merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_TITLE)
-    insertFilter(#comboItems + 1, merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_DYE)
-    insertFilter(#comboItems + 1, merSI_ACHIEVEMENT_FILTER_SHOW_WITH_REWARD_ITEM)
+    insertFilter(#comboItems + 1, SI_MER_ACHIEVEMENT_FILTER_WITH_TITLE)
+    insertFilter(#comboItems + 1, SI_MER_ACHIEVEMENT_FILTER_WITH_DYE)
+    insertFilter(#comboItems + 1, SI_MER_ACHIEVEMENT_FILTER_WITH_ITEM)
 
     comboBox:UpdateItems()
 end
